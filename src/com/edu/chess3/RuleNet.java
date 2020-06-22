@@ -1,4 +1,4 @@
-package com.edu.chess;
+package com.edu.chess3;
 /**
  * 通信规则
  */
@@ -6,7 +6,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.ArrayList;
-
 import javax.swing.JOptionPane;
 
 public class RuleNet implements Runnable{
@@ -15,16 +14,14 @@ public class RuleNet implements Runnable{
 	public static String ip=null;
 	public static int otherPort=0;
 	public static int receivePort=0;
-	@SuppressWarnings("unused")
-	private String message=ChessBoard.message;
-	private Chess chess[]=ChessBoard.chess;
-	private int[][] map=ChessBoard.map;
-	private short LocalPlayer=ChessBoard.LocalPlayer;
-	private ArrayList<Node> list=ChessBoard.list;
-	public static boolean isMyTurn = true;//标记是否自己执子
+	public boolean isMyTurn = true;//标记是否自己执子
+	private  short LocalPlayer=REDPLAYER;
 	private boolean flag=ChessBoard.flag;
-	private int x1=ChessBoard.x1,x2=ChessBoard.x2,y1=ChessBoard.y1,y2=ChessBoard.y2;
-
+	private int[][] map=ChessBoard.map;
+	private Chess chess[]=ChessBoard.chess;
+	private ArrayList<Node> list=ChessBoard.list;
+	private int x1=SelectChess.x1,x2=SelectChess.x2,y1=SelectChess.y1,y2=SelectChess.y2;
+	
 	//将棋子回退到上一步的位置，并把棋子未回退前的棋盘位置信息清空
 		private void rebackChess(int index,int x,int y,int oldX,int oldY){
 			chess[index].setPos(oldX, oldY);
@@ -73,15 +70,15 @@ public class RuleNet implements Runnable{
 			chess[index] = new Chess(temp,name,x,y);
 			map[x][y] = index;//将棋子放回到棋盘
 		}
-		public boolean SetMyTurn(boolean b) {
+		public void SetMyTurn(boolean b) {
 
 		isMyTurn = b;
+		SelectChess.isMyTurn=b;
 		if(b){
-			message = "请您开始走棋";
+			GameClient.mess.append("请您开始走棋"+"\r\n");
 		}else{
-			message = "对方正在思考";
+			GameClient.mess.append("对方正在思考"+"\r\n");
 		}                                                                                                                                                                          
-		return b;
 	}
 	public static void send(String str) {
 		DatagramSocket s = null;
@@ -89,7 +86,6 @@ public class RuleNet implements Runnable{
 			s = new DatagramSocket();
 			byte[] buffer;
 			buffer = new String(str).getBytes();
-//			InetAddress ia = InetAddress.getLocalHost();//获取本机地址
 			InetAddress ia = InetAddress.getByName(ip );//获取目标地址		
 			System.out.println("请求连接的ip是"+ip);
 			DatagramPacket dgp = new DatagramPacket(buffer, buffer.length,ia,otherPort);
@@ -105,6 +101,7 @@ public class RuleNet implements Runnable{
 	}
 	
 	
+	@SuppressWarnings("resource")
 	@Override
 	public void run() {
 		try{
@@ -119,6 +116,7 @@ public class RuleNet implements Runnable{
 				array = strData.split("\\|");
 				if(array[0].equals("join")){//对局被加入，我是黑方
 					LocalPlayer = BLACKPLAYER;
+					SelectChess.LocalPlayer=BLACKPLAYER;
 					GameClient.gamePanel.startNewGame(LocalPlayer);
 					if(LocalPlayer==REDPLAYER){
 						SetMyTurn(true);
@@ -129,7 +127,9 @@ public class RuleNet implements Runnable{
 					send("conn|");
 
 				}else if(array[0].equals("conn")){//我成功加入别人的对局，联机成功。我是红方
+					//System.out.println("红方"+ChessBoard.LocalPlayer);
 					LocalPlayer = REDPLAYER;
+					SelectChess.LocalPlayer=REDPLAYER;
 					GameClient.gamePanel.startNewGame(LocalPlayer);
 					if(LocalPlayer==REDPLAYER){
 						SetMyTurn(true);
@@ -150,7 +150,7 @@ public class RuleNet implements Runnable{
 						else
 							JOptionPane.showConfirmDialog(null, "红方赢了，你可以重新开始","你输了",JOptionPane.DEFAULT_OPTION);						
 					}
-					message = "你可以重新开局";
+					GameClient.mess.append("你可以重新开局"+"\r\n");
 					GameClient.buttonStart.setEnabled(true);//可以点击开始按钮了
 					//
 				}else if(array[0].equals("move")){
@@ -165,7 +165,7 @@ public class RuleNet implements Runnable{
 					int oldY = Short.parseShort(array[5]);//棋子移动前所在列数
 					int eatChessIndex = Short.parseShort(array[6]);//被吃掉的棋子索引
 					list.add(new Node(index,x2,y2,oldX,oldY,eatChessIndex));//记录下棋信息
-					message = "对方将棋子\""+chess[index].typeName+"\"移动到了("+x2+","+y2+")\n现在该你走棋";
+					GameClient.mess.append("对方将棋子\""+chess[index].typeName+"\"移动到了("+x2+","+y2+")\n现在该你走棋"+"\r\n");
 					Chess c = chess[index];
 					x1 = c.x;
 					y1 = c.y;
@@ -181,9 +181,10 @@ public class RuleNet implements Runnable{
 					}
 					GameClient.gamePanel.repaint();
 					isMyTurn = true;
+					SelectChess.isMyTurn=true;
 				}else if(array[0].equals("quit")){
 					JOptionPane.showConfirmDialog(null, "对方退出了，游戏结束！","提示",JOptionPane.DEFAULT_OPTION);
-					message = "对方退出了，游戏结束！";
+					GameClient.mess.append("对方退出了，游戏结束！"+"\r\n");
 					GameClient.buttonStart.setEnabled(true);//可以点击开始按钮了
 				}else if(array[0].equals("lose")){
 					JOptionPane.showConfirmDialog(null, "恭喜你，对方认输了！","你赢了",JOptionPane.DEFAULT_OPTION);
@@ -200,7 +201,7 @@ public class RuleNet implements Runnable{
 						send("refuse|");
 					}else if(choice == 0){//是,同意悔棋
 						send("agree|");
-						message = "同意了对方的悔棋，对方正在思考";
+						GameClient.mess.append("同意了对方的悔棋，对方正在思考"+"\r\n");
 						SetMyTurn(false);//对方下棋
 
 						Node temp = list.get(list.size()-1);//获取棋谱最后一步棋的信息
@@ -323,11 +324,6 @@ public class RuleNet implements Runnable{
 					JOptionPane.showMessageDialog(null, "对方拒绝了你的悔棋请求");					
 
 				}
-
-
-
-				//				System.out.println(new String(data));
-				//s.send(dgp);
 			}
 
 		}catch(Exception e){

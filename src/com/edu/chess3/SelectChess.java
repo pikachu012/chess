@@ -1,4 +1,4 @@
-package com.edu.chess;
+package com.edu.chess3;
 
 import java.awt.Rectangle;
 import java.awt.event.MouseAdapter;
@@ -7,23 +7,25 @@ import java.awt.event.MouseEvent;
 import javax.swing.JOptionPane;
 
 public class SelectChess extends MouseAdapter {
-	private String message = ChessBoard.message;
-	private boolean isFirstClick = true;
+	public static final short REDPLAYER = 1;
+	public static final short BLACKPLAYER = 0;
+	public static boolean isMyTurn =true; 
+	public static short LocalPlayer=REDPLAYER;
 	public static Chess firstChess = null;
 	public static Chess secondChess = null;
-	private boolean isMyTurn = true;
-	private int x1,x2,y1,y2;
-	private int tempX,tempY;
-	private int[][] map=ChessBoard.map;
-	private short LocalPlayer=ChessBoard.LocalPlayer;
-	Rule re=new Rule();
-	RuleNet rt=new RuleNet();
-	
+	public static int x1, x2, y1, y2;
+	private int tempX, tempY;
+	private boolean isFirstClick = true;
+	private int[][] map = ChessBoard.map;
+	Rule re = new Rule();
+	RuleNet rt = new RuleNet();
+
 	@Override
 	public void mouseClicked(MouseEvent e) {
 		if (isMyTurn == false) {
-			message = "现在该对方走棋";
+			GameClient.mess.append("现在该对方走棋" + "\r\n");
 			GameClient.gamePanel.repaint();
+			return;
 		}
 		selectedChess(e);
 		GameClient.gamePanel.repaint();
@@ -38,8 +40,9 @@ public class SelectChess extends MouseAdapter {
 			y1 = tempY;
 			if (firstChess != null) {
 				if (firstChess.player != LocalPlayer) {
-					message = "点击成对方棋子了";
-					return;
+					GameClient.mess.append("那方"+ LocalPlayer + "\r\n");
+					GameClient.mess.append("点击成对方棋子了" + "\r\n");
+					return ;
 				}
 				isFirstClick = false;
 			}
@@ -64,15 +67,15 @@ public class SelectChess extends MouseAdapter {
 					map[x2][y2] = index1;
 					ChessBoard.chess[index1].setPos(x2, y2);
 					// send
-					RuleNet.send("move" + "|" + index1 + "|" + (9 - x2) + "|" + (8 - y2) + "|" + (9 - x1) + "|" + (8 - y1) + "|"
-							+ "-1|");
+					RuleNet.send("move" + "|" + index1 + "|" + (9 - x2) + "|" + (8 - y2) + "|" + (9 - x1) + "|"
+							+ (8 - y1) + "|" + "-1|");
 					ChessBoard.list.add(new Node(index1, x2, y2, x1, y1, -1));// 存储我方下棋信息
 					// 置第一次选中标记量为空
 					isFirstClick = true;
 					GameClient.gamePanel.repaint();
 					rt.SetMyTurn(false);// 该对方了
 				} else {
-					message = "不符合走棋规则";
+					GameClient.mess.append("不符合走棋规则" + "\r\n");
 				}
 				return;
 			}
@@ -86,26 +89,26 @@ public class SelectChess extends MouseAdapter {
 				ChessBoard.chess[index1].setPos(x2, y2);
 				ChessBoard.chess[index2] = null;
 				GameClient.gamePanel.repaint();
-				RuleNet.send("move" + "|" + index1 + "|" + (9 - x2) + "|" + (8 - y2) + "|" + (9 - x1) + "|" + (8 - y1) + "|"
-						+ index2 + "|");
+				RuleNet.send("move" + "|" + index1 + "|" + (9 - x2) + "|" + (8 - y2) + "|" + (9 - x1) + "|" + (8 - y1)
+						+ "|" + index2 + "|");
 				ChessBoard.list.add(new Node(index1, x2, y2, x1, y1, index2));// 记录我方下棋信息
 				if (index2 == 0) {// 被吃掉的是将
-					message = "红方赢了";
-					JOptionPane.showConfirmDialog(null, "红方赢了", "提示", JOptionPane.DEFAULT_OPTION);
+					GameClient.mess.append("红方胜利" + "\r\n");
+					JOptionPane.showConfirmDialog(null, "红方胜利", "提示", JOptionPane.DEFAULT_OPTION);
 					// send
 					RuleNet.send("succ" + "|" + "红方赢了" + "|");
 					return;
 				}
 				if (index2 == 16) {// 被吃掉的是帅
-					message = "黑方赢了";
-					JOptionPane.showConfirmDialog(null, "黑方赢了", "提示", JOptionPane.DEFAULT_OPTION);
+					GameClient.mess.append("黑方胜利" + "\r\n");
+					JOptionPane.showConfirmDialog(null, "黑方胜利", "提示", JOptionPane.DEFAULT_OPTION);
 					// send
 					RuleNet.send("succ" + "|" + "黑方赢了" + "|");
 					return;
 				}
 				rt.SetMyTurn(false);// 该对方了
 			} else {// 不能吃子
-				message = "不能吃子";
+				GameClient.mess.append("不能吃子" + "\r\n");
 			}
 
 		}

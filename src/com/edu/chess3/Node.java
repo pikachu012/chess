@@ -1,4 +1,4 @@
-package com.edu.chess;
+package com.edu.chess3;
 
 //存储棋谱的每一步
 public class Node {

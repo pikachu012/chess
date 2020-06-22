@@ -1,4 +1,4 @@
-package com.edu.chess;
+package com.edu.chess3;
 /**
  * 行棋规则
  * @author 流年
@@ -56,13 +56,9 @@ public class Rule {
 			if(Math.abs(x-oldX)!=2||Math.abs(y-oldY)!=2){//如果横向或者纵向的位移量不同时为2，即不是走田字
 				return false;
 			}
-			if(x<5){//如果象越过“楚河-汉界”
+			if(x<5){//象过河
 				return false;
 			}
-			if(x<0||x>8){//如果象超出棋盘边界
-				return false;
-			}
-
 			int i=0,j=0;//记录象眼位置
 			if(x-oldX==2){//象向下跳
 				i=oldX+1;

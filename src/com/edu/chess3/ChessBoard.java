@@ -1,18 +1,11 @@
-package com.edu.chess;
+package com.edu.chess3;
 
 import java.awt.Graphics;
 import java.awt.Image;
-import java.awt.Rectangle;
 import java.awt.Toolkit;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.util.ArrayList;
-
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+
 
 @SuppressWarnings("serial")
 public class ChessBoard extends JPanel {
@@ -21,17 +14,8 @@ public class ChessBoard extends JPanel {
 	public static Chess[] chess = new Chess[32];//棋子数组
 	public static int[][] map = new int[10][9];//存储棋盘布局信息数组10行9列
 	public Image bufferImage;
-	private Chess firstChess = null;
-	private Chess secondChess = null;
-	private boolean isFirstClick = true;//标记是否第一次点击
-	public static int x1,y1,x2,y2;
-	private int tempX,tempY;
-	private boolean isMyTurn = true;//标记是否自己执子
-	public static short LocalPlayer = REDPLAYER;//记录当前执子方
-	public static String message = "";//提示信息
 	public static boolean flag = false;
 	public static   ArrayList<Node> list = new ArrayList<Node>();//存储棋谱
-	RuleNet rt=new RuleNet();
 
 	//初始化棋盘布局信息为空
 	private void initMap(){
@@ -46,24 +30,20 @@ public class ChessBoard extends JPanel {
 
 	public ChessBoard(){
 		initMap();
-		message = "程序处于等待联机状态!";
-		Rule re=new Rule();
-		
 		addMouseListener(new SelectChess());
-
 	}
 
 
 	public void startJoin(String ip,int otherPort,int receivePort){
 		flag = true;
-		rt.otherPort = otherPort;
-		rt.receivePort = receivePort;
-		rt.ip = ip;
+		RuleNet.otherPort = otherPort;
+		RuleNet.receivePort = receivePort;
+		RuleNet.ip = ip;
 		System.out.println("能帮我连接到"+ip+"吗");
-		rt.send("join|");
+		RuleNet.send("join|");
 		Thread th = new Thread(new RuleNet());
 		th.start();
-		//
+		
 	}
 
 	public void startNewGame(short player){
@@ -167,14 +147,12 @@ public class ChessBoard extends JPanel {
 				chess[i].paint(g, this);
 			}
 		}
-		if(firstChess!=null){
-			firstChess.DrawSelectedChess(g);
+		if(SelectChess.firstChess!=null){
+			SelectChess.firstChess.DrawSelectedChess(g);
 		}
-		if(secondChess!=null){
-			secondChess.DrawSelectedChess(g);
+		if(SelectChess.secondChess!=null){
+			SelectChess.secondChess.DrawSelectedChess(g);
 		}
-		//g.drawString(message, 0, 620);
-
 	}
 
 
